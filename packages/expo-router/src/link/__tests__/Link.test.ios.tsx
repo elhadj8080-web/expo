@@ -1291,3 +1291,107 @@ describe('Link.Trigger', () => {
     );
   });
 });
+
+describe('Navigation to current page', () => {
+  let warn;
+  let originalConsoleWarn;
+  beforeEach(() => {
+    originalConsoleWarn = console.warn;
+    warn = jest.fn();
+    console.warn = warn;
+  });
+  afterEach(() => {
+    console.warn = originalConsoleWarn;
+  });
+  it('When using link with preview to index with absolute path, prints a warning', () => {
+    renderRouter({
+      index: () => (
+        <Link href="/">
+          <Link.Trigger>Test</Link.Trigger>
+          <Link.Preview />
+        </Link>
+      ),
+      test: () => <View testID="test-page" />,
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      'Navigating to the current page using a link with preview will push a new entry onto the history stack. The same action without preview will stay on the current page. Href: /'
+    );
+  });
+  it('When using link with preview to nested with absolute path, prints a warning', () => {
+    renderRouter(
+      {
+        index: () => <View testID="index" />,
+        'nested/_layout': () => <Stack />,
+        'nested/l1/_layout': () => <Stack />,
+        'nested/l1/index': () => (
+          <Link href="/nested/l1">
+            <Link.Trigger>Test</Link.Trigger>
+            <Link.Preview />
+          </Link>
+        ),
+      },
+      { initialUrl: '/nested/l1' }
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      'Navigating to the current page using a link with preview will push a new entry onto the history stack. The same action without preview will stay on the current page. Href: /nested/l1'
+    );
+  });
+
+  it('When using link with preview to the current page with relative href, prints a warning', () => {
+    renderRouter({
+      index: () => (
+        <Link href="./">
+          <Link.Trigger>Test</Link.Trigger>
+          <Link.Preview />
+        </Link>
+      ),
+      test: () => <View testID="test-page" />,
+    });
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      'Navigating to the current page using a link with preview will push a new entry onto the history stack. The same action without preview will stay on the current page. Href: ./'
+    );
+  });
+  it('When using link with preview to nested without relativeToDirectory, prints a warning', () => {
+    renderRouter(
+      {
+        index: () => <View testID="index" />,
+        'nested/_layout': () => <Stack />,
+        'nested/l1/_layout': () => <Stack />,
+        'nested/l1/index': () => (
+          <Link href="./l1">
+            <Link.Trigger>Test</Link.Trigger>
+            <Link.Preview />
+          </Link>
+        ),
+      },
+      { initialUrl: '/nested/l1' }
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      'Navigating to the current page using a link with preview will push a new entry onto the history stack. The same action without preview will stay on the current page. Href: ./l1'
+    );
+  });
+  it('When using link with preview to nested with relativeToDirectory, prints a warning', () => {
+    renderRouter(
+      {
+        index: () => <View testID="index" />,
+        'nested/_layout': () => <Stack />,
+        'nested/l1/_layout': () => <Stack />,
+        'nested/l1/index': () => (
+          <Link href="./" relativeToDirectory>
+            <Link.Trigger>Test</Link.Trigger>
+            <Link.Preview />
+          </Link>
+        ),
+      },
+      { initialUrl: '/nested/l1' }
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn).toHaveBeenCalledWith(
+      'Navigating to the current page using a link with preview will push a new entry onto the history stack. The same action without preview will stay on the current page. Href: ./'
+    );
+  });
+});
